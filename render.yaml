@@ -2,7 +2,7 @@ services:
   - type: web
     name: mhdv-telegram-bot
     env: python
-    plan: free
+    plan: starter
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
     envVars:
@@ -10,7 +10,11 @@ services:
         sync: false
       - key: ADMIN_IDS
         sync: false
-      - key: ADMIN_PASSWORD
-        value: mhdvmim
       - key: DB_PATH
-        value: mhdv_bot.db
+        value: /var/data/mhdv_bot.db
+      - key: WEB_PANEL_PASSWORD
+        sync: false
+    disks:
+      - name: mhdv-data
+        mountPath: /var/data
+        sizeGB: 1
