@@ -3649,7 +3649,7 @@ async def dashboard(request):
     blocked_users = await db_count_users_blocked()
     orders_total = await db_orders_count_total()
     game_count = await db_game_count()
-    avg_rating = await db_avg_rating()
+    avg_rating, rating_count = await db_avg_rating()
 
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
@@ -3676,7 +3676,7 @@ async def dashboard(request):
             <div class="stat">⛔️ Bloklangan<br><b>{blocked_users}</b></div>
             <div class="stat">📦 Jami buyurtmalar<br><b>{orders_total}</b></div>
             <div class="stat">🎮 O'yin ishtirokchilari<br><b>{game_count}</b></div>
-            <div class="stat">⭐️ O'rtacha baho<br><b>{avg_rating:.2f}</b></div>
+            <div class="stat">⭐️ O'rtacha baho<br><b>{avg_rating:.2f}</b> ({rating_count} ta baho)</div>
         </div>
         <div class="card">
             <h3>📦 Buyurtmalar (turi / holati / soni)</h3>
