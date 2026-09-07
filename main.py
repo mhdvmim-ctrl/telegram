@@ -3367,6 +3367,40 @@ async def show_game_pick_list(message: Message, state: FSMContext, page: int):
 
 
 # =============================================================================
+# 8.5. TELEGRAM MINI-APP AMALLARI
+# =============================================================================
+
+@dp.message(F.web_app_data)
+async def miniapp_web_data(message: Message, state: FSMContext):
+    """Mini App tugmalarini botning mavjud oqimlariga bog'laydi."""
+    if await db_is_blocked(message.from_user.id):
+        return
+    try:
+        payload = json.loads(message.web_app_data.data or "{}")
+    except (json.JSONDecodeError, TypeError):
+        payload = {}
+    action = str(payload.get("action", "")).strip()
+    actions = {
+        "order_website": btn_website,
+        "order_logo": btn_logo,
+        "order_bot": btn_bot,
+        "order_ai": btn_ai_image,
+        "my_orders": btn_my_orders,
+        "faq": btn_faq,
+        "social": btn_social,
+        "admin_chat": btn_admin_chat,
+        "game": btn_game,
+        "feedback": btn_feedback,
+        "info": btn_info,
+    }
+    fn = actions.get(action)
+    if fn:
+        await fn(message, state)
+    else:
+        await message.answer("Mini-ilovadan noma'lum amal keldi. /start orqali qayta urinib ko'ring.")
+
+
+# =============================================================================
 # 9. MIDDLEWARE: bloklangan foydalanuvchilar, texnik ishlar rejimi, flood himoyasi
 # =============================================================================
 
@@ -3583,6 +3617,12 @@ async def health(request):
     return web.Response(text="MHDV bot ishlayapti ✅")
 
 
+async def miniapp(request):
+    """Telegram ichida ochiladigan MHDV Mini App."""
+    html_out = '<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f5f6f8"><title>MHDV Mini App</title><script src="https://telegram.org/js/telegram-web-app.js"></script><style>\n:root{--bg:#f5f6f8;--card:rgba(255,255,255,.84);--text:#101318;--muted:#777b84;--line:rgba(17,24,39,.08);--blue:#126dff;--shadow:0 18px 48px rgba(20,29,48,.12)}*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}body{padding-bottom:110px;background:radial-gradient(circle at 95% -10%,#dbeafe,transparent 32%),linear-gradient(180deg,#fafbfc,#f1f3f6)}.shell{max-width:720px;margin:auto;padding:18px 14px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.brand{display:flex;align-items:center;gap:11px}.logo{width:46px;height:46px;border-radius:16px;background:#111827;color:#fff;display:grid;place-items:center;font-weight:900}.hello{font-size:12px;color:var(--muted)}h1{font-size:20px;margin:1px 0}.avatar{width:42px;height:42px;border-radius:50%;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-weight:800}.hero{background:linear-gradient(135deg,#111827,#2b384d);color:white;border-radius:30px;padding:23px;box-shadow:0 18px 42px rgba(15,23,42,.18)}.hero small{opacity:.65}.hero h2{font-size:27px;line-height:1.08;margin:8px 0}.hero p{opacity:.76;font-size:14px;line-height:1.5}.cta{margin-top:14px;border:0;border-radius:15px;padding:12px 15px;background:white;font-weight:800}.head{display:flex;justify-content:space-between;align-items:end;margin:23px 2px 11px}.head h3{margin:0;font-size:18px}.head span{font-size:12px;color:var(--muted)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.service{border:1px solid var(--line);background:var(--card);border-radius:23px;padding:16px;text-align:left;min-height:142px;box-shadow:0 9px 28px rgba(15,23,42,.05);color:var(--text)}.ico{width:43px;height:43px;border-radius:14px;background:#eef2f7;display:grid;place-items:center;margin-bottom:16px}.ico svg,.quick svg,.setting svg,.navbtn svg,.fab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.service b{display:block;font-size:15px;margin-bottom:5px}.service em{font-style:normal;color:var(--muted);font-size:12px;line-height:1.35}.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.quick button{background:#fff;border:1px solid var(--line);border-radius:18px;padding:13px 7px;min-height:86px;font-size:12px;font-weight:750}.quick svg{display:block;margin:0 auto 8px}.page{display:none}.page.active{display:block}.list{background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden}.setting{width:100%;display:flex;gap:12px;align-items:center;padding:15px 16px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;color:var(--text)}.setting:last-child{border-bottom:0}.setting b{display:block;font-size:14px}.setting span{font-size:12px;color:var(--muted)}.bottom{position:fixed;left:0;right:0;bottom:max(12px,env(safe-area-inset-bottom));display:flex;justify-content:center;align-items:center;gap:10px;padding:0 10px;z-index:50;pointer-events:none}.dock{pointer-events:auto;display:flex;align-items:center;justify-content:space-around;gap:3px;width:min(calc(100% - 72px),500px);height:68px;padding:7px;border-radius:35px;background:rgba(255,255,255,.76);backdrop-filter:blur(24px) saturate(160%);border:1px solid rgba(255,255,255,.95);box-shadow:0 15px 46px rgba(17,24,39,.17),inset 0 0 0 1px rgba(17,24,39,.05)}.navbtn{height:52px;min-width:48px;border:0;border-radius:26px;background:transparent;color:#7a7e86;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 13px}.navbtn span{display:none;font-size:13px;font-weight:800}.navbtn.active{background:rgba(17,24,39,.07);color:#111}.navbtn.active span{display:inline}.fab{pointer-events:auto;width:58px;height:58px;border-radius:50%;border:0;background:linear-gradient(145deg,#2680ff,#075fe8);color:white;display:grid;place-items:center;box-shadow:0 12px 26px rgba(18,109,255,.32)}@media(max-width:380px){.navbtn.active span{display:none}.navbtn{padding:0 9px}.quick{grid-template-columns:1fr 1fr}.hero h2{font-size:24px}}\n</style></head><body><div class="shell"><div class="top"><div class="brand"><div class="logo">M</div><div><div class="hello" id="hello">Xush kelibsiz</div><h1>MHDV</h1></div></div><div class="avatar" id="avatar">U</div></div>\n<section class="page active" data-page="home"><div class="hero"><small>MHDV DIGITAL</small><h2>G\'oyangizni raqamli mahsulotga aylantiramiz.</h2><p>Sayt, logo, Telegram bot va AI vizual xizmatlarini bir joydan buyurtma qiling.</p><button class="cta" data-action="order_website">Yangi loyiha boshlash</button></div><div class="head"><h3>Xizmatlar</h3><span>Keraklisini tanlang</span></div><div class="grid">\n<button class="service" data-action="order_website"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></span><b>Veb-sayt</b><em>Landing, korporativ va web loyiha</em></button>\n<button class="service" data-action="order_logo"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 0-4h-1a1.5 1.5 0 0 1 0-3h3a6 6 0 0 0 0-12z"/></svg></span><b>Logo & brending</b><em>Zamonaviy brend identikasi</em></button>\n<button class="service" data-action="order_bot"><span class="ico"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="13" rx="4"/><path d="M9 3h6M12 3v3M8 12h.01M16 12h.01M9 16h6"/></svg></span><b>Telegram bot</b><em>Avtomatlashtirish va savdo botlari</em></button>\n<button class="service" data-action="order_ai"><span class="ico"><svg viewBox="0 0 24 24"><path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5zM18.5 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg></span><b>AI rasm</b><em>Reklama va kreativ vizuallar</em></button></div><div class="head"><h3>Tezkor bo\'limlar</h3></div><div class="quick"><button data-action="my_orders"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM8 7V4h8v3"/></svg>Buyurtmalarim</button><button data-action="admin_chat"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H8l-4 4z"/></svg>Admin chat</button><button data-action="game"><svg viewBox="0 0 24 24"><path d="M7 9h10l3 8a3 3 0 0 1-5 3l-2-2h-2l-2 2a3 3 0 0 1-5-3z"/></svg>Logo o\'yini</button></div></section>\n<section class="page" data-page="services"><div class="head"><h3>Barcha xizmatlar</h3><span>Botda davom etadi</span></div><div class="grid"><button class="service" data-action="order_website"><span class="ico">🌐</span><b>Veb-sayt</b><em>Professional web yechim</em></button><button class="service" data-action="order_logo"><span class="ico">✦</span><b>Logo</b><em>Brend identikasi</em></button><button class="service" data-action="order_bot"><span class="ico">⌁</span><b>Bot</b><em>Telegram avtomatizatsiya</em></button><button class="service" data-action="order_ai"><span class="ico">✧</span><b>AI rasm</b><em>Kreativ kontent</em></button></div></section>\n<section class="page" data-page="saved"><div class="head"><h3>Siz uchun</h3><span>Tezkor amallar</span></div><div class="list"><button class="setting" data-action="my_orders"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM8 7V4h8v3"/></svg><div><b>Buyurtmalarim</b><span>Holat va tarixni ko\'rish</span></div></button><button class="setting" data-action="feedback"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H8l-4 4z"/></svg><div><b>Taklif va shikoyat</b><span>Fikringizni yuboring</span></div></button><button class="setting" data-action="social"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/></svg><div><b>Ijtimoiy tarmoqlar</b><span>MHDV sahifalari</span></div></button></div></section>\n<section class="page" data-page="settings"><div class="head"><h3>Sozlamalar va yordam</h3></div><div class="list"><button class="setting" data-action="faq"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 9a2 2 0 1 1 3.4 1.5c-.9.7-1.4 1.1-1.4 2.5M12 17h.01"/></svg><div><b>FAQ</b><span>Ko\'p so\'raladigan savollar</span></div></button><button class="setting" data-action="info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg><div><b>MHDV haqida</b><span>Bot va jamoa haqida</span></div></button><button class="setting" data-action="admin_chat"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H8l-4 4z"/></svg><div><b>Yordam</b><span>Admin bilan yozishing</span></div></button></div></section></div>\n<div class="bottom"><nav class="dock"><button class="navbtn active" data-nav="home"><svg viewBox="0 0 24 24"><path d="m4 10 8-6 8 6v9H4z"/><path d="M9 19v-5h6v5"/></svg><span>Home</span></button><button class="navbtn" data-nav="services"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m14.5 9.5-2 5-5 2 2-5z"/></svg><span>Services</span></button><button class="navbtn" data-nav="saved"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg><span>Saved</span></button><button class="navbtn" data-nav="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.5 1a8 8 0 0 0-1.7-1L14.4 3h-4.8l-.4 3.1a8 8 0 0 0-1.7 1l-2.5-1-2 3.4L5.1 11a7 7 0 0 0 0 2L3 14.5l2 3.4 2.5-1a8 8 0 0 0 1.7 1l.4 3.1h4.8l.4-3.1a8 8 0 0 0 1.7-1l2.5 1 2-3.4-2.1-1.5a7 7 0 0 0 .1-1z"/></svg><span>Settings</span></button></nav><button class="fab" id="fab"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button></div>\n<script>(()=>{const tg=window.Telegram?.WebApp;if(tg){tg.ready();tg.expand();try{tg.setHeaderColor(\'#f5f6f8\');tg.setBackgroundColor(\'#f5f6f8\')}catch(e){}const u=tg.initDataUnsafe?.user;if(u){hello.textContent=\'Salom, \'+(u.first_name||\'foydalanuvchi\');avatar.textContent=(u.first_name||\'U\').charAt(0).toUpperCase()}}const pages=[...document.querySelectorAll(\'.page\')],navs=[...document.querySelectorAll(\'[data-nav]\')];function show(n){pages.forEach(p=>p.classList.toggle(\'active\',p.dataset.page===n));navs.forEach(b=>b.classList.toggle(\'active\',b.dataset.nav===n));scrollTo({top:0,behavior:\'smooth\'})}navs.forEach(b=>b.onclick=()=>show(b.dataset.nav));document.querySelectorAll(\'[data-action]\').forEach(b=>b.onclick=()=>{if(tg?.sendData){tg.sendData(JSON.stringify({action:b.dataset.action}));setTimeout(()=>tg.close(),120)}else alert(\'Bu amal Telegram ichida ishlaydi.\')});fab.onclick=()=>show(\'services\')})();</script></body></html>\n'
+    return web.Response(text=html_out, content_type="text/html", headers={"Cache-Control": "no-store"})
+
+
 def _check_basic_auth(request) -> bool:
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Basic "):
@@ -3606,54 +3646,74 @@ def _unauthorized():
 from html import escape as esc
 
 WEB_NAV = [
-    ("/dashboard", "📊 Bosh sahifa"),
-    ("/users", "👥 Foydalanuvchilar"),
-    ("/orders", "📦 Buyurtmalar"),
-    ("/payments", "💳 To'lovlar"),
-    ("/feedback", "📝 Fikrlar"),
-    ("/chats", "💬 Chatlar"),
-    ("/game", "🎮 O'yin"),
-    ("/broadcast", "📢 Xabar yuborish"),
-    ("/settings", "⚙️ Sozlamalar"),
-    ("/admins", "👑 Adminlar"),
-    ("/logs", "📜 Loglar"),
+    ("/dashboard", "Bosh sahifa", "home"),
+    ("/users", "Foydalanuvchilar", "users"),
+    ("/orders", "Buyurtmalar", "orders"),
+    ("/settings", "Sozlamalar", "settings"),
 ]
 
+WEB_MORE_NAV = [
+    ("/payments", "To'lovlar"),
+    ("/feedback", "Fikrlar"),
+    ("/chats", "Chatlar"),
+    ("/game", "O'yin"),
+    ("/broadcast", "Xabar yuborish"),
+    ("/admins", "Adminlar"),
+    ("/logs", "Loglar"),
+]
+
+
+def _web_icon(name: str) -> str:
+    paths = {
+        "home": '<path d="m4 10 8-6 8 6v9H4z"/><path d="M9 19v-5h6v5"/>',
+        "users": '<path d="M16 20v-1.8a4.2 4.2 0 0 0-4.2-4.2H7.2A4.2 4.2 0 0 0 3 18.2V20"/><circle cx="9.5" cy="7" r="4"/><path d="M17 11a4 4 0 0 1 0 7.7"/>',
+        "orders": '<path d="M4 7h16v13H4zM8 7V4h8v3"/>',
+        "settings": '<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.5 1a8 8 0 0 0-1.7-1L14.4 3h-4.8l-.4 3.1a8 8 0 0 0-1.7 1l-2.5-1-2 3.4L5.1 11a7 7 0 0 0 0 2L3 14.5l2 3.4 2.5-1a8 8 0 0 0 1.7 1l.4 3.1h4.8l.4-3.1a8 8 0 0 0 1.7-1l2.5 1 2-3.4-2.1-1.5a7 7 0 0 0 .1-1z"/>',
+    }
+    return f'<svg viewBox="0 0 24 24" aria-hidden="true">{paths.get(name, paths["home"])}</svg>'
+
+
 WEB_STYLE = """
-body { font-family: Arial, sans-serif; background:#0f172a; color:#e2e8f0; margin:0; }
-nav { background:#1e293b; padding:12px 20px; display:flex; flex-wrap:wrap; gap:6px; position:sticky; top:0; }
-nav a { color:#94a3b8; text-decoration:none; padding:8px 12px; border-radius:6px; font-size:14px; }
-nav a:hover, nav a.active { background:#334155; color:#38bdf8; }
-main { padding: 20px 24px; max-width: 1100px; margin: 0 auto; }
-h1 { color:#38bdf8; font-size:22px; }
-h3 { color:#7dd3fc; }
-.card { background:#1e293b; border-radius:10px; padding:16px; margin-bottom:16px; }
-table { border-collapse: collapse; width:100%; }
-td, th { border:1px solid #334155; padding:6px 10px; text-align:left; font-size:14px; }
-.stat { display:inline-block; margin-right:24px; margin-bottom:8px; }
-.stat b { font-size: 22px; color:#4ade80; }
-a.btn, button { background:#0ea5e9; color:white; border:none; padding:7px 14px; border-radius:6px;
-                cursor:pointer; text-decoration:none; display:inline-block; font-size:13px; margin:2px 4px 2px 0; }
-button.danger, a.btn.danger { background:#ef4444; }
-button.warn, a.btn.warn { background:#f59e0b; }
-input[type=text], textarea, select { background:#0f172a; border:1px solid #334155; color:#e2e8f0;
-                padding:8px; border-radius:6px; width:100%; box-sizing:border-box; margin-bottom:8px; }
-.pill { display:inline-block; padding:2px 8px; border-radius:12px; font-size:12px; background:#334155; }
-.pill.ok { background:#166534; } .pill.warn { background:#854d0e; } .pill.bad { background:#7f1d1d; }
-.pager a { margin-right: 8px; }
+:root{--bg:#f3f5f7;--card:#fff;--text:#12151a;--muted:#737983;--line:#e6e9ee;--blue:#126dff}
+*{box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text);margin:0;padding-bottom:105px}
+main{padding:22px 18px;max-width:1180px;margin:auto}
+h1{font-size:25px;letter-spacing:-.5px;margin:5px 0 20px}h3{font-size:17px}
+.card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:15px;box-shadow:0 8px 28px rgba(20,29,48,.05);overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:620px}td,th{border-bottom:1px solid var(--line);padding:10px;text-align:left;font-size:13px}th{color:var(--muted);font-weight:650}
+.stat{display:inline-block;min-width:145px;margin:7px 20px 7px 0;color:var(--muted);font-size:12px}.stat b{display:block;font-size:24px;color:#111827;margin-top:3px}
+a.btn,button{background:#111827;color:white;border:0;padding:9px 13px;border-radius:11px;cursor:pointer;text-decoration:none;display:inline-block;font-size:13px;margin:2px 4px 2px 0}
+button.danger,a.btn.danger{background:#ef4444}button.warn,a.btn.warn{background:#f59e0b}
+input[type=text],textarea,select{background:#f8fafc;border:1px solid #dfe3e8;color:#111827;padding:10px;border-radius:11px;width:100%;margin-bottom:9px}
+.pill{display:inline-block;padding:3px 8px;border-radius:12px;font-size:12px;background:#eef1f5}.pill.ok{background:#dcfce7}.pill.warn{background:#fef3c7}.pill.bad{background:#fee2e2}
+.pager a{margin-right:8px}
+.admin-bottom{position:fixed;z-index:100;left:0;right:0;bottom:14px;display:flex;justify-content:center;align-items:center;gap:10px;padding:0 12px;pointer-events:none}
+.admin-dock{pointer-events:auto;display:flex;align-items:center;justify-content:space-around;width:min(calc(100% - 72px),520px);height:68px;padding:7px;border-radius:35px;background:rgba(255,255,255,.80);backdrop-filter:blur(22px) saturate(155%);border:1px solid rgba(255,255,255,.95);box-shadow:0 15px 46px rgba(17,24,39,.16),inset 0 0 0 1px rgba(17,24,39,.04)}
+.admin-dock a{height:52px;min-width:48px;border-radius:26px;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 13px;color:#747982;text-decoration:none}
+.admin-dock a.active{background:rgba(17,24,39,.07);color:#111}.admin-dock svg,.admin-fab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.admin-dock span{display:none;font-size:13px;font-weight:800}.admin-dock a.active span{display:inline}
+.admin-fab{pointer-events:auto;width:58px;height:58px;border-radius:50%;border:0;background:linear-gradient(145deg,#2680ff,#075fe8);display:grid;place-items:center;color:#fff;box-shadow:0 12px 26px rgba(18,109,255,.30)}
+.more-sheet{display:none;position:fixed;z-index:110;left:50%;transform:translateX(-50%);bottom:94px;width:min(92%,500px);background:rgba(255,255,255,.96);backdrop-filter:blur(22px);border:1px solid var(--line);border-radius:24px;padding:12px;box-shadow:0 18px 55px rgba(17,24,39,.20)}
+.more-sheet.open{display:grid;grid-template-columns:1fr 1fr;gap:8px}.more-sheet a{padding:13px;border-radius:13px;background:#f3f5f7;color:#111;text-decoration:none;font-size:13px;font-weight:700}
+@media(max-width:430px){main{padding:16px 12px}.admin-dock a.active span{display:none}.admin-dock a{padding:0 9px}.stat{min-width:120px;margin-right:8px}}
 """
 
 
 def web_page(title: str, body: str, active: str = "") -> web.Response:
     nav_html = "".join(
-        f'<a href="{href}" class="{"active" if href == active else ""}">{label}</a>'
-        for href, label in WEB_NAV
+        f'<a href="{href}" class="{"active" if href == active else ""}">{_web_icon(icon)}<span>{label}</span></a>'
+        for href, label, icon in WEB_NAV
     )
-    html_out = f"""<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{esc(title)} — MHDV Panel</title><style>{WEB_STYLE}</style></head>
-    <body><nav>{nav_html}</nav><main><h1>{esc(title)}</h1>{body}</main></body></html>"""
+    more_html = "".join(f'<a href="{href}">{label}</a>' for href, label in WEB_MORE_NAV)
+    html_out = f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>{esc(title)} — MHDV Panel</title><style>{WEB_STYLE}</style></head><body>
+    <main><h1>{esc(title)}</h1>{body}</main>
+    <div class="more-sheet" id="moreSheet">{more_html}</div>
+    <div class="admin-bottom"><nav class="admin-dock">{nav_html}</nav>
+    <button class="admin-fab" id="moreBtn" title="Barcha bo'limlar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button></div>
+    <script>const b=document.getElementById('moreBtn'),s=document.getElementById('moreSheet');b.onclick=()=>s.classList.toggle('open');document.addEventListener('click',e=>{{if(!s.contains(e.target)&&!b.contains(e.target))s.classList.remove('open')}});</script>
+    </body></html>'''
     return web.Response(text=html_out, content_type="text/html")
-
 
 def _paginate(items, page: int, per_page: int = 20):
     total_pages = max(1, (len(items) + per_page - 1) // per_page)
@@ -4366,6 +4426,7 @@ async def start_web_server():
     app = web.Application()
     app.router.add_get("/", health)
     app.router.add_get("/health", health)
+    app.router.add_get("/miniapp", miniapp)
     app.router.add_get("/dashboard", dashboard)
     app.router.add_get("/users", web_users)
     app.router.add_get("/users/{tg_id}", web_user_detail)
