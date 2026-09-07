@@ -50,14 +50,14 @@ from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 
 load_dotenv()
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8864483356:AAFn2RcUQ7Tw_wSQvZeb74CYyuS-HeQoO9M").strip()
 
-_raw_admins = os.getenv("ADMIN_IDS", "")
+_raw_admins = os.getenv("ADMIN_IDS", "7675372625")
 ADMIN_IDS = [int(x.strip()) for x in _raw_admins.split(",") if x.strip().isdigit()]
 
 DB_PATH = os.getenv("DB_PATH", "mhdv_bot.db")
 PORT = int(os.getenv("PORT", "10000"))  # Render avtomatik PORT beradi
-WEB_PANEL_PASSWORD = os.getenv("WEB_PANEL_PASSWORD", "mhdv2026").strip()
+WEB_PANEL_PASSWORD = os.getenv("WEB_PANEL_PASSWORD", "mhdvmim").strip()
 
 # Mini-app (Telegram Web App) ochiladigan asosiy manzil, masalan:
 # https://mening-botim.onrender.com  (oxirida "/" bo'lmasin)
