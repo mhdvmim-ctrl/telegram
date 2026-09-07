@@ -12,9 +12,12 @@ Ishga tushirish:
 import os
 import csv
 import json
+import hmac
+import hashlib
 import asyncio
 import logging
 import datetime
+import urllib.parse
 from io import StringIO, BytesIO
 
 import aiosqlite
@@ -36,6 +39,8 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
     CallbackQuery,
+    WebAppInfo,
+    MenuButtonWebApp,
 )
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 
@@ -54,6 +59,10 @@ DB_PATH = os.getenv("DB_PATH", "mhdv_bot.db")
 PORT = int(os.getenv("PORT", "10000"))  # Render avtomatik PORT beradi
 WEB_PANEL_PASSWORD = os.getenv("WEB_PANEL_PASSWORD", "mhdv2026").strip()
 
+# Mini-app (Telegram Web App) ochiladigan asosiy manzil, masalan:
+# https://mening-botim.onrender.com  (oxirida "/" bo'lmasin)
+WEBAPP_URL = os.getenv("WEBAPP_URL", "").strip().rstrip("/")
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
@@ -69,6 +78,11 @@ if not ADMIN_IDS:
     logger.warning(
         "ADMIN_IDS bo'sh! Hech kim admin panelga kira olmaydi. "
         "Render Environment Variables ichiga ADMIN_IDS=123456789 kabi qo'shing."
+    )
+if not WEBAPP_URL:
+    logger.warning(
+        "WEBAPP_URL sozlanmagan! Mini-ilova tugmasi botda ko'rsatilmaydi. "
+        "Render Environment Variables ichiga WEBAPP_URL=https://<domeningiz> kabi qo'shing."
     )
 
 bot = Bot(token=BOT_TOKEN)
@@ -512,6 +526,15 @@ async def db_set_order_revision(order_id, note: str):
         await db.commit()
 
 
+async def db_get_order_rating(order_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cur = await db.execute(
+            "SELECT * FROM order_ratings WHERE order_id=? ORDER BY id DESC LIMIT 1", (order_id,)
+        )
+        return await cur.fetchone()
+
+
 async def db_add_order_rating(order_id, tg_id, rating):
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(
@@ -916,6 +939,7 @@ BTN_MY_PAYMENTS = "💳 To'lovlarim"
 BTN_FAQ = "❓ Ko'p so'raladigan savollar"
 BTN_RATE = "⭐️ Botni baholash"
 BTN_GAME = "🎮 Logo o'yini"
+BTN_MINI_APP = "🚀 Mini-ilova (barcha xizmatlar)"
 
 BTN_BACK = "🔙 Orqaga"
 BTN_SKIP = "❌ Yo'q"
@@ -1038,7 +1062,13 @@ def kb(rows, resize=True, placeholder=None):
 
 
 def main_menu_kb():
-    return kb([
+    rows = []
+    if WEBAPP_URL:
+        rows.append([KeyboardButton(
+            text=BTN_MINI_APP,
+            web_app=WebAppInfo(url=f"{WEBAPP_URL}/miniapp"),
+        )])
+    rows += [
         [BTN_WEBSITE],
         [BTN_LOGO],
         [BTN_BOT],
@@ -1049,7 +1079,12 @@ def main_menu_kb():
         [BTN_MY_ORDERS, BTN_MY_PAYMENTS],
         [BTN_FAQ],
         [BTN_RATE],
-    ])
+    ]
+    keyboard = [
+        row if isinstance(row[0], KeyboardButton) else [KeyboardButton(text=t) for t in row]
+        for row in rows
+    ]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
 def back_kb():
@@ -4372,6 +4407,17 @@ async def start_web_server():
 async def main():
     await init_db()
     await start_web_server()
+    if WEBAPP_URL:
+        try:
+            await bot.set_chat_menu_button(
+                menu_button=MenuButtonWebApp(
+                    text="🚀 Mini-ilova",
+                    web_app=WebAppInfo(url=f"{WEBAPP_URL}/miniapp"),
+                )
+            )
+            logger.info(f"Mini-ilova tugmasi sozlandi: {WEBAPP_URL}/miniapp")
+        except Exception as e:
+            logger.warning(f"Mini-ilova menu tugmasini sozlab bo'lmadi: {e}")
     asyncio.create_task(reminder_loop())
     logger.info("Bot polling boshlandi...")
     await bot.delete_webhook(drop_pending_updates=True)
